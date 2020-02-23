@@ -54,27 +54,17 @@ using System.Text;
         passPhrase = SimpleStringCipher.DefaultPassPhrase;
       if (salt == null)
         salt = SimpleStringCipher.DefaultSalt;
-      byte[] bytes1 = Encoding.UTF8.GetBytes(plainText);
-      using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(passPhrase, salt))
-      {
-        byte[] bytes2 = rfc2898DeriveBytes.GetBytes(32);
-        using (Aes aes = Aes.Create())
-        {
-          aes.Mode = CipherMode.CBC;
-          using (ICryptoTransform encryptor = aes.CreateEncryptor(bytes2, this.InitVectorBytes))
-          {
-            using (MemoryStream memoryStream = new MemoryStream())
-            {
-              using (CryptoStream cryptoStream = new CryptoStream((Stream) memoryStream, encryptor, CryptoStreamMode.Write))
-              {
-                cryptoStream.Write(bytes1, 0, bytes1.Length);
-                cryptoStream.FlushFinalBlock();
-                return Convert.ToBase64String(memoryStream.ToArray());
-              }
-            }
-          }
-        }
-      }
+      var bytes1 = Encoding.UTF8.GetBytes(plainText);
+      using var rfc2898DeriveBytes = new Rfc2898DeriveBytes(passPhrase, salt);
+      var bytes2 = rfc2898DeriveBytes.GetBytes(32);
+      using var aes = Aes.Create();
+      aes.Mode = CipherMode.CBC;
+      using var encryptor = aes.CreateEncryptor(bytes2, this.InitVectorBytes);
+      using var memoryStream = new MemoryStream();
+      using var cryptoStream = new CryptoStream((Stream) memoryStream, encryptor, CryptoStreamMode.Write);
+      cryptoStream.Write(bytes1, 0, bytes1.Length);
+      cryptoStream.FlushFinalBlock();
+      return Convert.ToBase64String(memoryStream.ToArray());
     }
 
     public string Decrypt(string cipherText, string passPhrase = null, byte[] salt = null)
@@ -85,27 +75,17 @@ using System.Text;
         passPhrase = SimpleStringCipher.DefaultPassPhrase;
       if (salt == null)
         salt = SimpleStringCipher.DefaultSalt;
-      byte[] buffer = Convert.FromBase64String(cipherText);
-      using (Rfc2898DeriveBytes rfc2898DeriveBytes = new Rfc2898DeriveBytes(passPhrase, salt))
-      {
-        byte[] bytes = rfc2898DeriveBytes.GetBytes(32);
-        using (Aes aes = Aes.Create())
-        {
-          aes.Mode = CipherMode.CBC;
-          using (ICryptoTransform decryptor = aes.CreateDecryptor(bytes, this.InitVectorBytes))
-          {
-            using (MemoryStream memoryStream = new MemoryStream(buffer))
-            {
-              using (CryptoStream cryptoStream = new CryptoStream((Stream) memoryStream, decryptor, CryptoStreamMode.Read))
-              {
-                byte[] numArray = new byte[buffer.Length];
-                int count = cryptoStream.Read(numArray, 0, numArray.Length);
-                return Encoding.UTF8.GetString(numArray, 0, count);
-              }
-            }
-          }
-        }
-      }
+      var buffer = Convert.FromBase64String(cipherText);
+      using var rfc2898DeriveBytes = new Rfc2898DeriveBytes(passPhrase, salt);
+      var bytes = rfc2898DeriveBytes.GetBytes(32);
+      using var aes = Aes.Create();
+      aes.Mode = CipherMode.CBC;
+      using var decryptor = aes.CreateDecryptor(bytes, this.InitVectorBytes);
+      using var memoryStream = new MemoryStream(buffer);
+      using var cryptoStream = new CryptoStream((Stream) memoryStream, decryptor, CryptoStreamMode.Read);
+      var numArray = new byte[buffer.Length];
+      var count = cryptoStream.Read(numArray, 0, numArray.Length);
+      return Encoding.UTF8.GetString(numArray, 0, count);
     }
   }
 

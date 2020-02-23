@@ -1,4 +1,11 @@
-public static class Guard
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.RegularExpressions;
+
+namespace DotnetCoreCommon
+{
+    public static class Guard
     {
         public static void AssertArgumentNotNull(object value, string argumentName)
         {
@@ -61,7 +68,7 @@ public static class Guard
         {
             if (!object1.Equals(object2))
             {
-                message = message ?? $"{object1} should equal to {object2}";
+                message ??= $"{object1} should equal to {object2}";
                 throw new InvalidOperationException(message);
             }
         }
@@ -70,7 +77,7 @@ public static class Guard
         {
             if (object1.Equals(object2))
             {
-                message = message ?? $"{object1} shouldn't equal to {object2}";
+                message ??= $"{object1} shouldn't equal to {object2}";
                 throw new InvalidOperationException(message);
             }
         }
@@ -112,9 +119,6 @@ public static class Guard
             Regex regex = new Regex(pattern);
             if (!regex.IsMatch(stringValue))
             {
-                if (!string.IsNullOrWhiteSpace(validationMessage))
-                    throw new UserFriendlyException(validationMessage);
-
                 throw new ArgumentException($"Value should match pattern {pattern}", argumentName);
             }
         }
@@ -131,9 +135,6 @@ public static class Guard
         {
             if (value < minimum || value > maximum)
             {
-                if (!string.IsNullOrEmpty(validationMessage))
-                    throw new UserFriendlyException(validationMessage);
-
                 throw new ArgumentException($"Value cannot be less than {minimum} or greater than {maximum}.",
                     argumentName);
             }
@@ -214,20 +215,6 @@ public static class Guard
             }
         }
 
-        public static void AssertDocumentIsValid(Document document)
-        {
-            if (document.Size > 0 && (document.Bytes == null || document.Bytes.Length == 0))
-                throw new ArgumentException($"Invalid or Empty document {document.Name}");
-        }
-
-        //public static void AssertPropertyValueIsAlphabetical(string text, string propertyName)
-        //{
-        //    if(Regex.IsMatch(text, @"^[\p{L}\s]*$") == false)
-        //    {
-        //        throw new ArgumentException($"{propertyName} does not accept numbers and special characters.");
-        //    }
-        //}
-
         public static void AssertPropertyValueIsDigits(string text, string propertyName)
         {
             if (text.All(char.IsDigit) == false)
@@ -235,53 +222,7 @@ public static class Guard
                 throw new ArgumentException($"{propertyName} accepts only numbers");
             }
         }
-
-        public static void AssertLocalizedTextIsValid(LocalizedText localizedText,
-            string argumentName, string pattern, string validationMessage = null)
-        {
-            var parsedName = JObject.Parse(localizedText.StringValue);
-
-            foreach (var property in parsedName.Properties())
-            {
-                Guard.AssertArgumentMatches(pattern, property.Value.ToString(), $"{property.Name} Name", validationMessage);
-            }
-        }
-
-        public static void AssertArgumentNotLessThan(int value, int compareToValue, string errorMessage)
-        {
-            if (value < compareToValue)
-            {
-                throw new UserFriendlyException(errorMessage);
-            }
-        }
-
-        public static void AssertArgumentNotLessThan(decimal value, decimal compareToValue, string errorMessage)
-        {
-            if (value < compareToValue)
-            {
-                throw new UserFriendlyException(errorMessage);
-            }
-        }
-
-        public static void AssertArgumentNotGreaterThan(int value, int compareToValue, string errorMessage)
-        {
-            if (value > compareToValue)
-            {
-                throw new UserFriendlyException(errorMessage);
-            }
-        }
-
-        public static void AssertPrecedesDate(DateTime value, DateTime dateToPrecede, string parameterName, string validationMessage = null)
-        {
-            if (value >= dateToPrecede)
-            {
-                if (!string.IsNullOrWhiteSpace(validationMessage))
-                    throw new UserFriendlyException(validationMessage);
-
-                throw new ArgumentOutOfRangeException(parameterName);
-            }
-        }
-
+        
         public static void AssertEnumValueIsValid(int value, Type enumType, string parameterName) {
             if (!Enum.IsDefined(enumType, value)) {
                 throw new ArgumentException($"The value {value} does not represent an enum of type {enumType.Name} for parameter {parameterName}");
@@ -300,7 +241,7 @@ public static class Guard
         {
             if (!collection.Contains(value))
             {
-                message = message ?? $"{collection} must contain {value}";
+                message ??= $"{collection} must contain {value}";
                 throw new InvalidOperationException(message);
             }
         }
@@ -309,8 +250,9 @@ public static class Guard
         {
             if (collection.Contains(value))
             {
-                message = message ?? $"{collection} must not contain {value}";
+                message ??= $"{collection} must not contain {value}";
                 throw new InvalidOperationException(message);
             }
         }
     }
+}
